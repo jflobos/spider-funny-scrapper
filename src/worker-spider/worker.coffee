@@ -3,9 +3,10 @@
 ###
 
 class Worker
-  constructor: (@cheerio) ->
+  constructor: (name = "worker") ->
+    console.log "Initializing new "+name
 
-  extract: (html_data) ->
+  extract: (url) ->
     data =
       info: {}
       links: []

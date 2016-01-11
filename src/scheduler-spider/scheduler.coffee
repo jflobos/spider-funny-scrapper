@@ -13,11 +13,14 @@ class Scheduler
     next_url = @pending_urls.pop()
     @send_worker(next_url)
     ###
+      Verificar sincronizador para poder trabajar con varios procesos concurrentes:
+        De momento corren varios juntos.
     if @goal > 0
       @send_worker(next_url) until @stop(next_url)
     else
       @send_worker(next_url) until @stop(next_url)
     ###
+
   stop: (next_url, has_goal) ->
     if has_goal
       console.log(next_url)
@@ -32,12 +35,14 @@ class Scheduler
       method: 'GET'
       url: url
     console.log "Enviando request a "+url
-    @request uri, (err, response, body) ->
+    @request uri, (err, response, body) =>
       if err
         console.error err
       data = @worker.extract(body)
+      console.log url
+      console.log JSON.stringify data, null, 2
       @pending_urls.concat data.links
-      console.log(data.info)
+      console.log @pending_urls
     return true
 
 module.exports = Scheduler

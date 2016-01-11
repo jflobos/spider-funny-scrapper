@@ -6,18 +6,21 @@ Worker = require "../worker.coffee"
 
 class WikiQuotesSpider extends Worker
   constructor: (cheerio) ->
-    super(cheerio)
+    super(cheerio, "wiki-quote-worker")
 
   extract: (html_data) ->
     $ = @cheerio.load html_data
     quotes =
       author: @get_page_info($)
       quotes: @extract_quotes($)
-      #categories: @get_quotes($)
     data =
       info: quotes
-      links: []
-    return quotes
+      links: @get_links($)
+    return data
+
+  get_links: ($) ->
+    __.map $('#mw-normal-catlinks ul li a'), (elem) ->
+      elem.attribs.href
 
   get_page_info: ($) ->
     categories = $('#mw-normal-catlinks ul li a')
@@ -61,7 +64,13 @@ class WikiQuotesSpider extends Worker
       $(li).text()
 
   has_references = ($, li) ->
-    $('ul',li) > 0
+    try
+      return $('ul',li) > 0
+    catch error
+      return false
+
+
+
 
   extract_quotes: ($) ->
     body_elems = $("#mw-content-text").children()
