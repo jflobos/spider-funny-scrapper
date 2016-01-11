@@ -10,10 +10,6 @@ WikiQuoteWorker = Worker;
 WikiQuoteWorker.prototype = {
   extract: function(html_data){
     $ = this.cheerio.load(html_data);
-    var quotes = {
-      author: this.get_page_info($),
-      quotes: this.extract_quotes($)
-    }
     return {
       info: {
         author: this.get_page_info($),
@@ -23,7 +19,7 @@ WikiQuoteWorker.prototype = {
     }
   },
   get_links: function($){
-    __.map($('#mw-normal-catlinks ul li a'), function(elem){
+    return __.map($('#mw-normal-catlinks ul li a'), function(elem){
       return elem.attribs.href;
     });
   },
@@ -38,7 +34,7 @@ WikiQuoteWorker.prototype = {
     };
   },
   extract_categories: function(elems){
-    __.map(elems, function(elem){
+    return __.map(elems, function(elem){
         return{
           rel_url: elem.attribs.href,
           category: elem.children[0].data
@@ -46,24 +42,25 @@ WikiQuoteWorker.prototype = {
     });
   },
   filtered_li_elems: function(ul){
-    __.filter(ul, function(li){
-      return li.name == 'li'
+    return __.filter(ul, function(li){
+      return li.name == 'li';
     });
   },
   references: function($, ul){
-    __.map(this.filtered_li_elems(ul), function(li){
+    return __.map(this.filtered_li_elems(ul), function(li){
       return $(li).text();
     });
   },
   has_references: function($, li){
     try{
-      return true;
+      return $('ul',li) > 0;
     }
     catch(error){
       return false;
     }
   },
   extract_quotes: function($){
+    var vm = this;
     var body_elems = $("#mw-content-text").children();
     var description = "";
     var context = "";
@@ -74,11 +71,11 @@ WikiQuoteWorker.prototype = {
           description = $(elem).text();
           break;
         case 'ul':
-          __.each(filtered_li_elems(elem.children), function(li){
+          __.each(vm.filtered_li_elems(elem.children), function(li){
             quote = {};
-            if (this.has_references($, li)){
+            if (vm.has_references($, li)){
               quote.text = li.data;
-              quote.references = this.references($('ul', li));
+              quote.references = vm.references($('ul', li));
             }
             else{
               quote.text =  $(li).text();
@@ -86,6 +83,7 @@ WikiQuoteWorker.prototype = {
             if (context){
               quote.context = context;
             }
+            quotes.push(quote);
           });
           break;
         case 'h2':
@@ -95,9 +93,10 @@ WikiQuoteWorker.prototype = {
           context = $(elem.children[0]).text();
           break;
         default:
-          console.log(elem.name);
+          break;
       }
     });
+    return quotes;
   }
 }
 
